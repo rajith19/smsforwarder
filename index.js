@@ -11,10 +11,11 @@ app.use((req, res, next) => {
     console.log('Incoming request:', req.method, req.url, req.body);
     if (req.body.sender && req.body.body) {
         req.body.sender = req.body.sender.replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
-        req.body.body = req.body.body.replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
+        req.body.body = req.body.body.replace(/[\u0000-\u001F\u007F-\u009F]/g, '').replace(/[\r\n\t]/g, ' ');
     }
     next();
 });
+
 
 app.get('/', (req, res) => {
     console.log('Request received:', req.body);
@@ -23,11 +24,15 @@ app.get('/', (req, res) => {
 });
 
 app.post('/forward-sms', (req, res) => {
-    console.log('Request received:', req.body);
+    console.log('Sanitized request received:', req.body);
     const { sender, body } = req.body;
+
+    // Validate if data is clean
+    if (!sender || !body) {
+        return res.status(400).send('Invalid data received');
+    }
     res.status(200).send('SMS forwarded successfully');
 });
-
 
 
 const PORT = process.env.PORT || 3000;
